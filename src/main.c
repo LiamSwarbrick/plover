@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void resize_callback(u32 width, u32 height)
+{
+    glViewport(0, 0, width, height);
+}
+
 #if 1
 int WINAPI
 WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
@@ -12,7 +17,7 @@ main(int argc, char** argv)
 #endif
 {
     // NOTE: Setup window
-    HWND window = win32_create_window(1280, 720, "Niiice");
+    HWND window = win32_create_window(1280, 720, "Niiice", (Plvr_Resize_Callback_Proc)resize_callback);
     HDC device_context = GetDC(window);
     
     if (!win32_opengl_make_context(device_context))  // NOTE: OpenGL 4.5
@@ -79,7 +84,7 @@ main(int argc, char** argv)
         {
             dir = -1;
         }
-
+        
         color_filter.x += 0.005 * dir;
 
         // NOTE: Render

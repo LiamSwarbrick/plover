@@ -15,10 +15,12 @@ static int is_xinput_supported = 0;
 static Gamepad_State gamepad_state;
 static u8 previous_keyboard_state[512];
 static u8 current_keyboard_state[512];
-
+static u64 pc_frequency;  // NOTE: Performance counter frequency
 static HGLRC win32_opengl_context;
 
-static u64 pc_frequency;  // NOTE: Performance counter frequency
+// NOTE: Window resize callback
+typedef void (*Plvr_Resize_Callback_Proc)(u32 width, u32 height);
+Plvr_Resize_Callback_Proc win32_resize_callback;
 
 /* NOTE: OpenGL context */
 
@@ -163,11 +165,27 @@ win32_window_callback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
     switch (message)
     {
         case WM_CLOSE:
-            DestroyWindow(window);
+            {
+                DestroyWindow(window);
+            }
             break;
 
         case WM_DESTROY:
-            PostQuitMessage(0);
+            {
+                PostQuitMessage(0);
+            }
+            break;
+
+        // NOTE: Window resize callback
+        case WM_SIZE:
+            {
+                RECT window_rect;
+                GetClientRect(window, &window_rect);
+                if (win32_opengl_context != NULL && win32_resize_callback != NULL)
+                {
+                    win32_resize_callback(window_rect.right - window_rect.left, window_rect.bottom - window_rect.top);
+                }
+            }
             break;
 
         // NOTE: Mouse messages
@@ -218,8 +236,10 @@ win32_window_callback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
 }
 
 HWND
-win32_create_window(int width, int height, char* title)
+win32_create_window(int width, int height, char* title, Plvr_Resize_Callback_Proc resize_callback_proc)
 {   
+    win32_resize_callback = resize_callback_proc;
+
     // NOTE: Get clock frequency once on initialization
     if (QueryPerformanceFrequency((LARGE_INTEGER*)&pc_frequency))
     {
@@ -273,7 +293,7 @@ win32_create_window(int width, int height, char* title)
 void
 win32_poll_messages(HWND window)
 {
-    // NOTE: Copy current keyboard array to previous
+    // NOTE: Copy current keyboard array to previous    
     CopyMemory(previous_keyboard_state, current_keyboard_state, sizeof(current_keyboard_state));
 
     // NOTE: Message Loop
