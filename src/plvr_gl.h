@@ -5,14 +5,14 @@
 #include "plvr_math.h"
 #include "plvr_win32_platform.h"
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>  // NOTE: calloc() for loading shader source in compile_shader_file()
 
-/* NOTE: Types */
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>  // NOTE: For loading image formats (possible TODO: create own image file readers)
 
+/* OpenGL debug */
 
-/* NOTE: OpenGL debug */
-
-static void APIENTRY openglCallbackFunction(
+static void APIENTRY opengl_callback(
         unused GLenum source,
         unused GLenum type,
         unused GLuint id,
@@ -21,15 +21,16 @@ static void APIENTRY openglCallbackFunction(
         const GLchar* message,
         unused const void* user_param)
 {
-    printf("[OpenGL callback]%s\n", message);
+    printf("[OpenGL callback]"ANSI_BLUE"%s\n\n"ANSI_RESET, message);
     
     if (severity == GL_DEBUG_SEVERITY_HIGH)
     {
-        printf("OpenGL error severity was high and needs fixing!\n");
+        printf(ANSI_RED"OpenGL error severity was high and needs fixing!\n\n"ANSI_RESET);
+        ExitProcess(0);
     }
 }
 
-/* NOTE: Shaders */
+/* Shaders */
 
 u32
 compile_shader_file(char* filepath, u32 shader_type)
@@ -54,7 +55,7 @@ compile_shader_file(char* filepath, u32 shader_type)
     u32 shader = glCreateShader(shader_type);
     glShaderSource(shader, 1, (const char * const*)&source_buffer, NULL);
     glCompileShader(shader);
-    
+
     free(source_buffer);
 
     // NOTE: Check for failure
@@ -103,8 +104,44 @@ compile_shader_program(u32* shaders, int shader_count, const char* opengl_debug_
     return program;
 }
 
-/* NOTE: Textures */
+/* Textures */
 
+typedef struct Texture2D
+{
+    u32 id;             // NOTE: OpenGL texture id
+    s32 width, height;  // NOTE: Texture dimensions on x and y
+    s32 color_channel_count;
+}
+Texture2D;
+
+Texture2D
+load_texture(const char* filepath)
+{
+    Texture2D texture = { 0 };
+
+    // NOTE: Uses stbi_image.h to load image
+    stbi_set_flip_vertically_on_load(1);
+    u32* data = (u32*)stbi_load(filepath, &texture.width, &texture.height, &texture.color_channel_count, 0);
+    if (data != NULL)
+    {
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture.id);
+        glTextureStorage2D(texture.id, 1, GL_RGBA8, texture.width, texture.height);
+        glTextureSubImage2D(texture.id, 0, 0, 0, texture.width, texture.height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        
+        glTextureParameteri(texture.id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(texture.id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(texture.id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(texture.id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
+    else
+    {
+        printf("[Error]load_texture(%s) failed:  Failed to load texture", filepath);
+    }
+    
+    stbi_image_free(data);
+
+    return texture;
+}
 
 
 #endif  // PLVR_GL_H

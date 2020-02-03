@@ -3,7 +3,6 @@
 
 // NOTE: Include order is specific
 #include "plvr_basic.h"
-#include "plvr_input.h"
 #include "plvr_system.h"
 #include <windows.h>
 #include <xinput.h>
@@ -15,6 +14,7 @@ static int is_xinput_supported = 0;
 static Gamepad_State gamepad_state;
 static u8 previous_keyboard_state[512];
 static u8 current_keyboard_state[512];
+static int alt_is_down;
 static u64 pc_frequency;  // NOTE: Performance counter frequency
 static HGLRC win32_opengl_context;
 
@@ -22,16 +22,16 @@ static HGLRC win32_opengl_context;
 typedef void (*Plvr_Resize_Callback_Proc)(u32 width, u32 height);
 Plvr_Resize_Callback_Proc win32_resize_callback;
 
-/* NOTE: OpenGL context */
+/* OpenGL context */
 
 static int
 win32_opengl_make_context(HDC device_context)
 {
     // NOTE: These WGL functions are needed to setup our OpenGL context
-    PFNWGLCHOOSEPIXELFORMATARBPROC    wglChoosePixelFormatARB = NULL;
-    PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
-    unused PFNWGLMAKECONTEXTCURRENTARBPROC   wglMakeContextCurrentARB = NULL;
-    PFNWGLSWAPINTERVALEXTPROC         wglSwapIntervalEXT = NULL;
+    PFNWGLCHOOSEPIXELFORMATARBPROC          wglChoosePixelFormatARB = NULL;
+    PFNWGLCREATECONTEXTATTRIBSARBPROC       wglCreateContextAttribsARB = NULL;
+    unused PFNWGLMAKECONTEXTCURRENTARBPROC  wglMakeContextCurrentARB = NULL;
+    PFNWGLSWAPINTERVALEXTPROC               wglSwapIntervalEXT = NULL;
 
     PIXELFORMATDESCRIPTOR pfd;
     ZeroMemory(&pfd, sizeof(pfd));
@@ -102,9 +102,10 @@ win32_opengl_make_context(HDC device_context)
     wglMakeCurrent(device_context, 0);
     wglDeleteContext(test_render_context);
     wglMakeCurrent(device_context, win32_opengl_context);
-    wglSwapIntervalEXT(1);  // NOTE: 1 to enable vsync, 0 for to disable vsync
+    wglSwapIntervalEXT(0);  // NOTE: 1 to enable vsync, 0 for to disable vsync
     
     // NOTE: Load OpenGL core profile procs
+    //       This just saves loads of busy work with OpenGL proc loading
     if (gl3wInit())
     {
         printf("[In win32_opengl_make_context()] gl3wInit() failed\n");
@@ -208,7 +209,7 @@ win32_window_callback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
             {
                 u32 key_code = wparam;
                 int is_down = !(lparam & (1 << 31));
-                int alt_is_down = (lparam & (1 << 29));
+                alt_is_down = (lparam & (1 << 29));
 
                 if (is_down && key_code == VK_F4 && alt_is_down)
                 {
@@ -336,9 +337,19 @@ win32_poll_messages(HWND window)
     }
 }
 
+void
+win32_swap_buffers(HDC device_context, u64 start_timems, u64 end_timems, u64 ms_per_frame)
+{
+    if (end_timems - start_timems < ms_per_frame)
+    {
+        Sleep(ms_per_frame - (end_timems - start_timems));
+    }
+    SwapBuffers(device_context);
+}
+
 /* NOTE: Implementations of plvr_system.h */
 u64
-get_time()
+get_timems()
 {
     u64 clock_ticks;
     QueryPerformanceCounter((LARGE_INTEGER*)&clock_ticks);
@@ -371,6 +382,22 @@ key_just_released(u32 key)
     return previous_keyboard_state[key] && !current_keyboard_state[key];
 }
 
+void
+mouse_get_relative(int from_x, int from_y, int* x, int* y)
+{
+    POINT cursor_pos;
+    GetCursorPos(&cursor_pos);
+    
+    *x = cursor_pos.x - from_x;
+    *y = cursor_pos.y - from_y;
+}
+
+void
+mouse_set_pos(int x, int y)
+{
+    SetCursorPos(x, y);
+}
+
 int
 gamepad_is_supported(void)
 {
@@ -382,5 +409,7 @@ gamepad_get_state(void)
 {
     return &gamepad_state;
 }
+
+
 
 #endif  // PLVR_WIN32_PLATFORM_H

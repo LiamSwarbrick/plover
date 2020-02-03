@@ -22,7 +22,6 @@ typedef int64_t s64;
 #define unused __attribute__ ((unused))
 // #define unused
 
-
 // NOTE: Debug output
 // Below are ANSI escape codes to change text color
 #define ANSI_RED "\033[0;31m"
