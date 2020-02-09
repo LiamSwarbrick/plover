@@ -1,6 +1,7 @@
 #include "plvr_win32_platform.h"
 #include "plvr_gl.h"
 #include "player.h"
+#include "mesh.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -49,70 +50,57 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
     u32 program = compile_shader_program(shaders, 2, "Texture_Shader");
 
     Texture2D texture = load_texture("assets/waters.png");
-
-    // NOTE: Initialize geometry
-    u32 vao, vbo;
-    glCreateVertexArrays(1, &vao);
-    glCreateBuffers(1, &vbo);
-
-    float vertices[] = {
-         // front face
-         -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  // 0. front bl
-         -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  // 1. front tl
-          0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // 2. front tr
-         -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  // 0. front bl
-          0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // 2. front tr
-          0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // 3. front br
-         // back face
-          0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  // 7. back br
-          0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  // 6. back tr
-         -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // 5. back tl
-          0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  // 7. back br
-         -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // 5. back tl
-         -0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  // 4. back bl
-         // left face
-         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  // 4. back bl
-         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  // 5. back tl
-         -0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // 1. front tl
-         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  // 4. back bl
-         -0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // 1. front t
-         -0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // 0. front bl
-         // right face
-          0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  // 3. front br
-          0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  // 2. front tr
-          0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // 6. back tr
-          0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  // 3. front br
-          0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // 6. back tr
-          0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  // 7. back br
-         // top face
-         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  // 1. front tl
-         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  // 5. back tl
-          0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // 6. back tr
-         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  // 1. front tl
-          0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // 6. back tr
-          0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // 2. front tr
-         // bottom face
-         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  // 4. back bl
-         -0.5f, -0.5f,  0.5f,  0.0f, 1.0f,  // 0. front bl
-          0.5f, -0.5f,  0.5f,  1.0f, 1.0f,  // 3. front br
-         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  // 4. back bl
-          0.5f, -0.5f,  0.5f,  1.0f, 1.0f,  // 3. front br
-          0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  // 7. back br
+    
+    // NOTE: Mesh
+    Vertex vertices[] = {
+        // front face
+        { { -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
+        { { -0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 1. front tl
+        { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. front tr
+        { { -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
+        { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. front tr
+        { {  0.5f, -0.5f,  0.5f }, { 1.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 3. front br
+        // back face
+        { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 7. back br
+        { {  0.5f,  0.5f, -0.5f }, { 0.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 6. back tr
+        { { -0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 5. back tl
+        { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 7. back br
+        { { -0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 5. back tl
+        { { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 4. back bl
+        // left face
+        { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 4. back bl
+        { { -0.5f,  0.5f, -0.5f }, { 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 5. back tl
+        { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 1. front tl
+        { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 4. back bl
+        { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 1. front t
+        { { -0.5f, -0.5f,  0.5f }, { 1.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 0. front bl
+        // right face
+        { {  0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 3. front br
+        { {  0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 2. front tr
+        { {  0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 6. back tr
+        { {  0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 3. front br
+        { {  0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 6. back tr
+        { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 7. back br
+        // top face
+        { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 1. front tl
+        { { -0.5f,  0.5f, -0.5f }, { 0.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 5. back tl
+        { {  0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 6. back tr
+        { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 1. front tl
+        { {  0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 6. back tr
+        { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 2. front tr
+        // bottom face
+        { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 4. back bl
+        { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 0. front bl
+        { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
+        { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 4. back bl
+        { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
+        { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 7. back br
     };
-    glNamedBufferStorage(vbo, sizeof(vertices), vertices, GL_MAP_WRITE_BIT);
-
-    // NOTE: Position (vec3)
-    glVertexArrayAttribBinding(vao, 0, 0);
-    glEnableVertexArrayAttrib(vao, 0);
-    glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
-    
-    // NOTE: Texture coords (vec2)
-    glVertexArrayAttribBinding(vao, 1, 0);
-    glEnableVertexArrayAttrib(vao, 1);
-    glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
-    
-    // NOTE: Link all together
-    glVertexArrayVertexBuffer(vao, 0, vbo, (GLintptr)0, 5 * sizeof(float));
+    u32 indices[] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+    };
+    Mesh mesh = mesh_create(vertices, 36, indices, 36, texture);
 
     // NOTE: Player
     Player player = { 0 };
@@ -155,23 +143,13 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
         glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(program);
-        glProgramUniform4f(program, glGetUniformLocation(program, "color_filter"), 1.0f, 1.0f, 1.0f, 1.0f);
-        glBindVertexArray(vao);
-        glBindTextureUnit(0, texture.id);
-        for (int i = 0; i < 10; ++i)
-        {
-            Matrix4 model = MAT4_IDENTITY_INIT;
-            m4_translate(model, (Vector3){ 2.0f * i, 0.2f * i, 0.0f }, model);
-            m4_rotate(model, rad(1.0f), (Vector3){ 0.5f, 0.5f, 0.0f }, model);
-
-            Matrix4 mvp;
-            m4_mul(player.camera_matrix, model, mvp);
-
-            glProgramUniformMatrix4fv(program, 20, 1, GL_FALSE, (float*)mvp);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        Matrix4 model = MAT4_IDENTITY_INIT;
+        m4_translate(model, (Vector3){ 0.0f, 0.0f, 2.0f }, model);
+        m4_scale(model, (Vector3){ 1.0f, 2.0f, 1.0f }, model);
+        m4_rotate(model, time, (Vector3){ 0.0f, 1.0f, 0.0f }, model);
         
+        mesh_render(mesh, model, player.camera_matrix, program);
+
         win32_swap_buffers(device_context, start_timems, get_timems(), 1000 / 60);
     }
 
