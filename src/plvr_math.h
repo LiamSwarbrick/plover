@@ -80,8 +80,8 @@ typedef float Matrix4[4][4];
 
 #define PLVR_MIN(a, b) a < b ? a : b
 #define PLVR_MAX(a, b) a > b ? a : b
-#define PLVR_RAD(degrees) degrees * (PI / 180.0f);
-#define PLVR_DEG(radians) radians * (180.0f / PI);
+#define PLVR_RAD(degrees) degrees * (PI / 180.0f)
+#define PLVR_DEG(radians) radians * (180.0f / PI)
 
 macro float
 rad(float degrees)

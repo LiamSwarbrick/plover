@@ -280,7 +280,7 @@ win32_create_window(int width, int height, char* title, Plvr_Resize_Callback_Pro
     DWORD window_style = WS_VISIBLE | WS_CAPTION | WS_MINIMIZEBOX | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
     RECT window_rect = { 0, 0, width, height };
     AdjustWindowRect(&window_rect, window_style, FALSE);
-
+    
     HWND window = CreateWindowExA(0, window_class.lpszClassName, title, window_style, CW_USEDEFAULT, CW_USEDEFAULT, window_rect.right, window_rect.bottom, 0, 0, window_class.hInstance, 0);
     if (window == NULL)
     {

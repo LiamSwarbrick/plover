@@ -49,8 +49,9 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
                        compile_shader_file("shaders/test_frag.glsl", GL_FRAGMENT_SHADER) };
     u32 program = compile_shader_program(shaders, 2, "Texture_Shader");
 
-    Texture2D texture = load_texture("assets/waters.png");
-    
+    Texture2D texture0 = load_texture("assets/thingpng.png");
+    Texture2D texture1 = load_texture("assets/waters.png");
+
     // NOTE: Mesh
     Vertex vertices[] = {
         // front face
@@ -97,13 +98,39 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
         { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 7. back br
     };
     u32 indices[] = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+        19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
     };
-    Mesh mesh = mesh_create(vertices, 36, indices, 36, texture);
-
+    Mesh mesh = mesh_create(vertices, 36, indices, 36, texture0);
+    
     // NOTE: Player
     Player player = { 0 };
+
+    // NOTE: Blocks
+    typedef struct Block
+    {
+        Vector3 position;
+        Vector3 size;  // width, height & depth
+        Vector3 color_filter;
+        Texture2D texture;
+    }
+    Block;
+
+    #define BLOCKS_ACROSS 100
+    int block_count = BLOCKS_ACROSS * BLOCKS_ACROSS;
+    Block blocks[BLOCKS_ACROSS][BLOCKS_ACROSS];
+    for (int x = 0; x < BLOCKS_ACROSS; ++x)
+    {
+        for (int z = 0; z < BLOCKS_ACROSS; ++z)
+        {
+            blocks[x][z] = (Block){
+                { (float)x, (float)(x + z) / 20.0f, (float)z },
+                { 1.0f, 1.0f, 1.0f },
+                { 1.0f, 1.0f, 1.0f },
+                x % 2 == 0 ? texture0 : texture1
+            };
+        }
+    }
 
     // NOTE: Main loop
     s64 last_time_ms;  // NOTE: Milliseconds
@@ -136,20 +163,31 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
             ShowCursor(0);
 
         // NOTE: Camera movement
-        player.aspect = win_width / win_height;
+        player.aspect = (float)win_width / (float)win_height;
         player_update(&player, delta);
         
         // NOTE: Render
         glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Matrix4 model = MAT4_IDENTITY_INIT;
-        m4_translate(model, (Vector3){ 0.0f, 0.0f, 2.0f }, model);
-        m4_scale(model, (Vector3){ 1.0f, 2.0f, 1.0f }, model);
-        m4_rotate(model, time, (Vector3){ 0.0f, 1.0f, 0.0f }, model);
+        for (int x = 0; x < BLOCKS_ACROSS; ++x)
+        {
+            for (int z = 0; z < BLOCKS_ACROSS; ++z)
+            {
+                Block block = blocks[x][z];
+                Matrix4 model = MAT4_IDENTITY_INIT;
+                block.position.y = (float)(x + z) * 10.0f * sin(fmodf((float)(x + z), time * 1000.0f));
+                m4_translate(model, block.position, model);
+                block.size.x = sin(time + block.position.x);
+                block.size.z = cos(time + block.position.z);
+                block.size.y = sin(time + block.position.y);
+                m4_scale(model, block.size, model);
+                
+                mesh.texture = block.texture;
+                mesh_render(mesh, model, player.camera_matrix, program);
+            }
+        }
         
-        mesh_render(mesh, model, player.camera_matrix, program);
-
         win32_swap_buffers(device_context, start_timems, get_timems(), 1000 / 60);
     }
 

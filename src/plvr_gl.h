@@ -21,10 +21,10 @@ static void APIENTRY opengl_callback(
         const GLchar* message,
         unused const void* user_param)
 {
-    printf("[OpenGL callback]"ANSI_BLUE"%s\n\n"ANSI_RESET, message);
     
     if (severity == GL_DEBUG_SEVERITY_HIGH)
     {
+        printf("[OpenGL callback]"ANSI_BLUE"%s\n\n"ANSI_RESET, message);
         printf(ANSI_RED"OpenGL error severity was high and needs fixing!\n\n"ANSI_RESET);
         ExitProcess(0);
     }

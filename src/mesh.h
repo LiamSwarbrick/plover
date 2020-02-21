@@ -53,7 +53,7 @@ mesh_create(Vertex* vertices, u32 vertex_count, u32* indices, u32 index_count, T
     glVertexArrayVertexBuffer(vao, 0, vbo, (GLintptr)0, sizeof(Vertex));
 
     Mesh mesh = { vao, vbo, ebo, vertex_count, index_count, vertices, indices, texture };
-
+    
     return mesh;
 }
 

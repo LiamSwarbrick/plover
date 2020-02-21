@@ -33,7 +33,7 @@ player_update(Player* player, float delta)
     
     player->rotation.x += (float)mouse_relative.y * mouse_sensitivity;
     player->rotation.y += (float)mouse_relative.x * mouse_sensitivity;
-    
+
     float speed = 5.0f * delta;
     if (GetKeyState(VK_LCONTROL) < 0)
         speed *= 3.0f;
