@@ -42,100 +42,80 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // NOTE: Premultiplied alpha
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // NOTE: Premultiplied alpha
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // NOTE: Wireframe mode
     glPatchParameteri(GL_PATCH_VERTICES, 3);
     
-
     // NOTE: Load Assets
     u32 shaders[2] = { compile_shader_file("shaders/test_vert.glsl", GL_VERTEX_SHADER),
                        compile_shader_file("shaders/test_frag.glsl", GL_FRAGMENT_SHADER) };
     u32 program = compile_shader_program(shaders, 2, "Texture_Shader");
 
-    Texture2D diffuse_map = load_texture("assets/waters.png");
+    Texture2D diffuse_map = load_texture("assets/thingpng.png");//flower_blue_orchid.png");
     Texture2D normal_map = load_texture("assets/thingpng.png");
 
     // NOTE: Mesh
+    // Mesh mesh = gen_primitive_cube(2.0f, 3.0f, 4.0f, diffuse_map, (Texture2D){ 0 }, normal_map);
+    
+    float width = 2.0f;
+    float height = 3.0f;
+    float depth = 4.0f;
     Vertex vertices[] = {
         // front face
-        { { -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
-        { { -0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 1. front tl
-        { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. front tr
-        { { -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
-        { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. front tr
-        { {  0.5f, -0.5f,  0.5f }, { 1.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 3. front br
+        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
+        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 1. front tl
+        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. front tr
+        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
+        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. front tr
+        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 3. front br
         // back face
-        { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 7. back br
-        { {  0.5f,  0.5f, -0.5f }, { 0.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 6. back tr
-        { { -0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 5. back tl
-        { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 7. back br
-        { { -0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 5. back tl
-        { { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 4. back bl
+        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 7. back br
+        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 6. back tr
+        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 5. back tl
+        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 7. back br
+        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 5. back tl
+        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 1.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 4. back bl
         // left face
-        { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 4. back bl
-        { { -0.5f,  0.5f, -0.5f }, { 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 5. back tl
-        { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 1. front tl
-        { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 4. back bl
-        { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 1. front t
-        { { -0.5f, -0.5f,  0.5f }, { 1.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 0. front bl
+        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 4. back bl
+        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 5. back tl
+        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 1. front tl
+        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 4. back bl
+        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 1. front t
+        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 0. front bl
         // right face
-        { {  0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 3. front br
-        { {  0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 2. front tr
-        { {  0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 6. back tr
-        { {  0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 3. front br
-        { {  0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 6. back tr
-        { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 7. back br
+        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 3. front br
+        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 2. front tr
+        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 6. back tr
+        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 3. front br
+        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 6. back tr
+        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 1.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 7. back br
         // top face
-        { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 1. front tl
-        { { -0.5f,  0.5f, -0.5f }, { 0.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 5. back tl
-        { {  0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 6. back tr
-        { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 1. front tl
-        { {  0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 6. back tr
-        { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 2. front tr
+        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 1. front tl
+        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 0.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 5. back tl
+        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 6. back tr
+        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 1. front tl
+        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 6. back tr
+        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 2. front tr
         // bottom face
-        { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 4. back bl
-        { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 0. front bl
-        { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
-        { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 4. back bl
-        { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
-        { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 7. back br
+        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 4. back bl
+        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 0. front bl
+        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
+        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 4. back bl
+        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
+        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 1.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 7. back br
     };
     u32 indices[] = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
         19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
     };
+
     Mesh mesh = mesh_create(vertices, 36, indices, 36, diffuse_map, (Texture2D){ 0 }, normal_map);
     
     // NOTE: Player
     Player player = { 0 };
 
-    // NOTE: Blocks
-    typedef struct Block
-    {
-        Vector3 position;
-        Vector3 size;  // width, height & depth
-        Vector3 color_filter;
-        Texture2D texture;
-    }
-    Block;
-    
-    #define BLOCKS_ACROSS 100
-    Block blocks[BLOCKS_ACROSS][BLOCKS_ACROSS];
-    for (int x = 0; x < BLOCKS_ACROSS; ++x)
-    {
-        for (int z = 0; z < BLOCKS_ACROSS; ++z)
-        {
-            blocks[x][z] = (Block){
-                { (float)x, (float)(x + z) / 20.0f, (float)z },
-                { 1.0f, 1.0f, 1.0f },
-                { 1.0f, 1.0f, 1.0f },
-                diffuse_map
-            };
-        }
-    }
-    
     // NOTE: Main loop
     s64 last_time_ms;  // NOTE: Milliseconds
     s64 current_time_ms = get_timems();  // NOTE: Milliseconds
@@ -174,23 +154,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
         glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        for (int x = 0; x < BLOCKS_ACROSS; ++x)
-        {
-            for (int z = 0; z < BLOCKS_ACROSS; ++z)
-            {
-                Block block = blocks[x][z];
-                Matrix4 model = MAT4_IDENTITY_INIT;
-                block.position.y = (float)(x + z) * 10.0f * sin(fmodf((float)(x + z), time * 1000.0f));
-                m4_translate(model, block.position, model);
-                block.size.x = sin(time + block.position.x);
-                block.size.z = cos(time + block.position.z);
-                block.size.y = sin(time + block.position.y);
-                m4_scale(model, block.size, model);
-                
-                mesh.diffuse_map = block.texture;
-                mesh_render(mesh, model, player.camera_matrix, (Vector4){ 1.0f, 1.0f, 1.0f, 1.0f }, program);
-            }
-        }
+        Matrix4 model = MAT4_IDENTITY_INIT;
+        mesh_render(mesh, model, player.camera_matrix, (Vector4){ 1.0f, 1.0f, 1.0f, 1.0f }, program);
         
         win32_swap_buffers(device_context, start_timems, get_timems(), 1000 / 100);
     }

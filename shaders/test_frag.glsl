@@ -11,5 +11,8 @@ uniform vec4 color_filter;
 void
 main(void)
 {
-    frag_col = texture(diffuse_map, tex_coord) * color_filter;
+    vec4 color = texture(diffuse_map, tex_coord) * color_filter;
+    if (color.a < 0.1)
+        discard;
+    frag_col = color;
 }
