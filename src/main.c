@@ -30,7 +30,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
     }
     SetWindowTextA(window, (LPCSTR)glGetString(GL_VERSION));
     ShowCursor(0);
-
+    
     // NOTE: Set the OpenGL debug callback to opengl_callback from plvr_gl.h
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -40,17 +40,22 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
     glViewport(0, 0, win_width, win_height);
     
     glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // NOTE: Premultiplied alpha
+
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // NOTE: Wireframe mode
     glPatchParameteri(GL_PATCH_VERTICES, 3);
+    
 
     // NOTE: Load Assets
     u32 shaders[2] = { compile_shader_file("shaders/test_vert.glsl", GL_VERTEX_SHADER),
                        compile_shader_file("shaders/test_frag.glsl", GL_FRAGMENT_SHADER) };
     u32 program = compile_shader_program(shaders, 2, "Texture_Shader");
 
-    Texture2D texture0 = load_texture("assets/thingpng.png");
-    Texture2D texture1 = load_texture("assets/waters.png");
+    Texture2D diffuse_map = load_texture("assets/waters.png");
+    Texture2D normal_map = load_texture("assets/thingpng.png");
 
     // NOTE: Mesh
     Vertex vertices[] = {
@@ -101,7 +106,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
         19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
     };
-    Mesh mesh = mesh_create(vertices, 36, indices, 36, texture0);
+    Mesh mesh = mesh_create(vertices, 36, indices, 36, diffuse_map, (Texture2D){ 0 }, normal_map);
     
     // NOTE: Player
     Player player = { 0 };
@@ -115,9 +120,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
         Texture2D texture;
     }
     Block;
-
+    
     #define BLOCKS_ACROSS 100
-    int block_count = BLOCKS_ACROSS * BLOCKS_ACROSS;
     Block blocks[BLOCKS_ACROSS][BLOCKS_ACROSS];
     for (int x = 0; x < BLOCKS_ACROSS; ++x)
     {
@@ -127,11 +131,11 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
                 { (float)x, (float)(x + z) / 20.0f, (float)z },
                 { 1.0f, 1.0f, 1.0f },
                 { 1.0f, 1.0f, 1.0f },
-                x % 2 == 0 ? texture0 : texture1
+                diffuse_map
             };
         }
     }
-
+    
     // NOTE: Main loop
     s64 last_time_ms;  // NOTE: Milliseconds
     s64 current_time_ms = get_timems();  // NOTE: Milliseconds
@@ -161,7 +165,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
             ShowCursor(1);
         else if (key_just_pressed('R'))
             ShowCursor(0);
-
+        
         // NOTE: Camera movement
         player.aspect = (float)win_width / (float)win_height;
         player_update(&player, delta);
@@ -183,12 +187,12 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
                 block.size.y = sin(time + block.position.y);
                 m4_scale(model, block.size, model);
                 
-                mesh.texture = block.texture;
-                mesh_render(mesh, model, player.camera_matrix, program);
+                mesh.diffuse_map = block.texture;
+                mesh_render(mesh, model, player.camera_matrix, (Vector4){ 1.0f, 1.0f, 1.0f, 1.0f }, program);
             }
         }
         
-        win32_swap_buffers(device_context, start_timems, get_timems(), 1000 / 60);
+        win32_swap_buffers(device_context, start_timems, get_timems(), 1000 / 100);
     }
 
     return 0;

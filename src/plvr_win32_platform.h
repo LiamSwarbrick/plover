@@ -76,7 +76,7 @@ win32_opengl_make_context(HDC device_context)
         WGL_SAMPLES_ARB, 4,
         0
     };
-
+    
     UINT num_formats = 0;
     wglChoosePixelFormatARB(device_context, pixel_format_attribs, NULL, 1, &pixel_format, &num_formats);
     if (pixel_format == 0)
