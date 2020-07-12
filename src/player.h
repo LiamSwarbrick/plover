@@ -31,7 +31,17 @@ player_update(Player* player, float delta)
     mouse_get_relative(1920 / 2, 1080 / 2, &mouse_relative.x, &mouse_relative.y);
     mouse_set_pos(1920 / 2, 1080 / 2);
     
-    player->rotation.x += (float)mouse_relative.y * mouse_sensitivity;
+    player->rotation.x = player->rotation.x + (float)mouse_relative.y * mouse_sensitivity;
+    // NOTE: X rotation lock so no going upside-down
+    if (player->rotation.x < -90.0f)
+    {
+        player->rotation.x = -90.0f;
+    }
+    else if (player->rotation.x > 90.0f)
+    {
+        player->rotation.x = 90.0f;
+    }
+    
     player->rotation.y += (float)mouse_relative.x * mouse_sensitivity;
 
     float speed = 5.0f * delta;

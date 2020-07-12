@@ -9,7 +9,7 @@
 typedef struct Vertex
 {
     Vector3 position;
-    Vector2 texcoord;
+    Vector2 uv;
     Vector3 normal;
 }
 Vertex;
@@ -17,30 +17,22 @@ Vertex;
 typedef struct Mesh
 {
     u32 vao, vbo, ebo;
-    u32 vertex_count, indices_count;
+    u32 v_count, indices_count;
     Vertex* vertices;
     u32* indices;
     Texture2D diffuse_map, specular_map, normal_map;
 }
 Mesh;
 
-typedef struct Model
-{
-    char* filepath;
-    u32 mesh_count;
-    Mesh* meshes;
-}
-Model;
-
 Mesh
-mesh_create(Vertex* vertices, u32 vertex_count, u32* indices, u32 indices_count, Texture2D diffuse_map, Texture2D specular_map, Texture2D normal_map)
+mesh_create(Vertex* vertices, u32 v_count, u32* indices, u32 indices_count, Texture2D diffuse_map, Texture2D specular_map, Texture2D normal_map)
 {
     u32 vao, vbo, ebo;
     glCreateVertexArrays(1, &vao);
     glCreateBuffers(1, &vbo);
     glCreateBuffers(1, &ebo);
 
-    glNamedBufferStorage(vbo, sizeof(Vertex) * vertex_count, vertices, GL_MAP_WRITE_BIT);
+    glNamedBufferStorage(vbo, sizeof(Vertex) * v_count, vertices, GL_MAP_WRITE_BIT);
     glNamedBufferStorage(ebo, sizeof(u32) * indices_count, indices, GL_MAP_WRITE_BIT);
 
     // NOTE: Vertex position (Vector3) (location = 0)
@@ -51,7 +43,7 @@ mesh_create(Vertex* vertices, u32 vertex_count, u32* indices, u32 indices_count,
     // NOTE: Vertex texture coords (Vector2) (location = 1)
     glVertexArrayAttribBinding(vao, 1, 0);
     glEnableVertexArrayAttrib(vao, 1);
-    glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, texcoord));
+    glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, uv));
     
     // NOTE: Vertex normal (Vector3) (location = 2)
     glVertexArrayAttribBinding(vao, 2, 0);
@@ -61,9 +53,16 @@ mesh_create(Vertex* vertices, u32 vertex_count, u32* indices, u32 indices_count,
     // NOTE: Link all together
     glVertexArrayVertexBuffer(vao, 0, vbo, (GLintptr)0, sizeof(Vertex));
 
-    Mesh mesh = { vao, vbo, ebo, vertex_count, indices_count, vertices, indices, diffuse_map, specular_map, normal_map };
+    Mesh mesh = { vao, vbo, ebo, v_count, indices_count, vertices, indices, diffuse_map, specular_map, normal_map };
     
     return mesh;
+}
+
+void mesh_delete(Mesh* mesh)
+{
+    glDeleteVertexArrays(1, mesh->vao);
+    glDeleteBuffers(1, mesh->vbo);
+    glDeleteBuffers(1, mesh->ebo);
 }
 
 void
@@ -85,77 +84,135 @@ mesh_render(Mesh mesh, Matrix4 model, Matrix4 camera_matrix, Vector4 diffuse_col
     glDrawElements(GL_TRIANGLES, mesh.indices_count, GL_UNSIGNED_INT, mesh.indices);
 }
 
-Mesh
-gen_primitive_cube(float width, float height, float depth, Texture2D diffuse_map, Texture2D specular_map, Texture2D normal_map)
+
+
+/* obj parser not working
+int
+load_obj(const char* filepath, Mesh* out_mesh)
 {
-    Vertex vertices[] = {
-        // front face
-        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
-        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 1. front tl
-        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. front tr
-        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
-        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. front tr
-        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 3. front br
-        // back face
-        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 7. back br
-        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 6. back tr
-        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 5. back tl
-        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 7. back br
-        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f } },  // 5. back tl
-        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 1.0f, 0.0f }, {  0.0f,  0.0f, -1.0f } },  // 4. back bl
-        // left face
-        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 4. back bl
-        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 5. back tl
-        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 1. front tl
-        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 4. back bl
-        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f } },  // 1. front t
-        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 0.0f }, { -1.0f,  0.0f,  0.0f } },  // 0. front bl
-        // right face
-        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 3. front br
-        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 2. front tr
-        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 6. back tr
-        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 3. front br
-        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } },  // 6. back tr
-        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 1.0f, 0.0f }, {  1.0f,  0.0f,  0.0f } },  // 7. back br
-        // top face
-        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 1. front tl
-        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 0.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 5. back tl
-        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 6. back tr
-        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 1. front tl
-        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f } },  // 6. back tr
-        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 0.0f }, {  0.0f,  1.0f,  0.0f } },  // 2. front tr
-        // bottom face
-        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 4. back bl
-        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 0. front bl
-        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
-        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 4. back bl
-        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
-        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 1.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 7. back br
-    };
-    u32 indices[] = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-        19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
-    };
+    // TODO FUTURE: Write a faster parser,
+    // REF:  http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
+    u32* vertex_indices; 
+    u32* uv_indices;
+    u32* normal_indices;
+    
+    // NOTE: line headers:
+    //        - v: vertex
+    //        - vt: uv / texcoord
+    //        - vn: vertex normal
+    //        - f: face
 
-    Mesh mesh = mesh_create(vertices, 36, indices, 36, diffuse_map, specular_map, normal_map);
-    return mesh;
+    FILE* fp = fopen(filepath, "r");
+    
+    // NOTE: Find how many vertices, uvs, normals and faces
+    int obj_v_count = 0;
+    int obj_vt_count = 0;
+    int obj_vn_count = 0;
+    int obj_f_count = 0;
+    
+    char s[128];
+    while (1)
+    {
+        if (fscanf(fp, "%s", s) == EOF)
+        {
+            break;
+        }
+
+        if (strcmp(s, "v") == 0)
+        {
+            ++obj_v_count;
+        }
+        else if (strcmp(s, "vt") == 0)
+        {
+            ++obj_vt_count;
+        }
+        else if (strcmp(s, "vn") == 0)
+        {
+            ++obj_vn_count;
+        }
+        else if (strcmp(s, "f") == 0)
+        {
+            ++obj_f_count;
+        }
+    }
+    rewind(fp);
+
+    u32 vertices_count = obj_f_count * 3;
+    u32 indices_count = vertices_count;
+
+    // NOTE: One allocation to reduce alloc overhead
+    void* obj_data_memblock = malloc((obj_v_count * sizeof(Vector3*)) + (obj_vt_count * sizeof(Vector2)) + (obj_vn_count + sizeof(Vector3)));
+    Vector3* positions = obj_data_memblock;
+    Vector2* uvs = obj_data_memblock + (obj_v_count * sizeof(Vector3*));
+    Vector3* normals = (void*)uvs + (obj_vt_count * sizeof(Vector2));
+
+    Vertex* vertices = malloc(vertices_count * sizeof(Vertex)) + (indices_count * sizeof(u32));
+    u32* indices = (void*)vertices + (indices_count * sizeof(u32));  // NOTE: Currently just 0,1,2,3,4,...
+    
+    while (1)
+    {
+        char line_header[128];
+
+        if (fscanf(fp, "%s", line_header) == EOF)
+        {
+            break;
+        }
+
+        static int positions_added = 0;
+        static int uvs_added = 0;
+        static int normals_added = 0;
+        static int faces_added = 0;
+        static int vertices_added = 0;
+
+        if (strcmp(line_header, "v") == 0)  // v: vertex position
+        {
+            Vector3 position;
+            fscanf(fp, "%f %f %f\n", &position.x, &position.y, &position.z);
+            positions[positions_added++] = position;
+        }
+        else if (strcmp(line_header, "vt") == 0)  // vt: uv
+        {
+            Vector2 uv;
+            fscanf(fp, "%f %f\n", &uv.x, &uv.y);
+            uvs[uvs_added++] = uv;
+        }
+        else if (strcmp(line_header, "vn") == 0)  // vn: normal
+        {
+            Vector3 normal;
+            fscanf(fp, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+            normals[normals_added++] = normal;
+        }
+        else if (strcmp(line_header, "f") == 0)  // f: face
+        {
+            u32 position_index[3];
+            u32 uv_index[3];
+            u32 normal_index[3];
+            if (fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &position_index[0], &uv_index[0], &normal_index[0], &position_index[1], &uv_index[1], &normal_index[1], &position_index[2], &uv_index[2], &normal_index[2]) != 9)
+            {
+                printf("Parser too bad to read this file, fix parser or fix obj file!\n");
+                return 0;  // failure
+            }
+
+            // NOTE: Create 3 vertices from index data and add to vertices array
+            indices[vertices_added] = vertices_added;  // NOTE: Currently indices aren't optimially implemented
+            vertices[vertices_added++] = (Vertex){ positions[position_index[0]], uvs[uv_index[0]], normals[normal_index[0]] };
+            indices[vertices_added] = vertices_added;
+            vertices[vertices_added++] = (Vertex){ positions[position_index[1]], uvs[uv_index[1]], normals[normal_index[1]] };
+            indices[vertices_added] = vertices_added;
+            vertices[vertices_added++] = (Vertex){ positions[position_index[2]], uvs[uv_index[2]], normals[normal_index[2]] };
+
+            ++faces_added;
+        }
+    }
+    
+    Mesh mesh = mesh_create(vertices, vertices_count, indices, indices_count, (Texture2D){ 0 }, (Texture2D){ 0 }, (Texture2D){ 0 });
+    out_mesh = &mesh;
+
+    fclose(fp);
+    free(obj_data_memblock);
+
+    return 1;  // success
 }
-
-Mesh
-gen_primitive_quad(float width, float height, Texture2D diffuse_map, Texture2D specular_map, Texture2D normal_map)
-{
-    Vertex vertices[] = {
-        { { -width/2, -height/2, 0.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. bl
-        { { -width/2,  height/2, 0.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 1. tl
-        { {  width/2,  height/2, 0.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. tr
-        { {  width/2, -height/2, 0.0f }, { 1.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 3. br
-    };
-    u32 indices[] = {
-        0, 1, 2, 0, 2, 3
-    };
-
-    Mesh mesh = mesh_create(vertices, 4, indices, 6, diffuse_map, specular_map, normal_map);
-    return mesh;
-}
+*/
 
 #endif  // PLVR_MESH_H

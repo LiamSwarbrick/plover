@@ -42,8 +42,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // NOTE: Premultiplied alpha
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // NOTE: Premultiplied alpha
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // NOTE: Wireframe mode
     glPatchParameteri(GL_PATCH_VERTICES, 3);
@@ -53,16 +53,15 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
                        compile_shader_file("shaders/test_frag.glsl", GL_FRAGMENT_SHADER) };
     u32 program = compile_shader_program(shaders, 2, "Texture_Shader");
 
-    Texture2D diffuse_map = load_texture("assets/thingpng.png");//flower_blue_orchid.png");
-    Texture2D normal_map = load_texture("assets/thingpng.png");
-
-    // NOTE: Mesh
-    // Mesh mesh = gen_primitive_cube(2.0f, 3.0f, 4.0f, diffuse_map, (Texture2D){ 0 }, normal_map);
+    Texture2D diffuse_map = load_texture("assets/flower_blue_orchid.png");
+    Texture2D specular_map = (Texture2D){ 0 };
+    Texture2D normal_map = (Texture2D){ 0 };
     
-    float width = 2.0f;
-    float height = 3.0f;
-    float depth = 4.0f;
-    Vertex vertices[] = {
+    // NOTE: Mesh
+    float width = 1.0f;
+    float height = 1.0f;
+    float depth = 1.0f;
+    Vertex cube_vertices[] = {
         // front face
         { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. front bl
         { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 1. front tl
@@ -106,13 +105,57 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
         { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } },  // 3. front br
         { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 1.0f, 0.0f }, {  0.0f, -1.0f,  0.0f } },  // 7. back br
     };
-    u32 indices[] = {
+    u32 cube_indices[] = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
         19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
     };
-
-    Mesh mesh = mesh_create(vertices, 36, indices, 36, diffuse_map, (Texture2D){ 0 }, normal_map);
     
+    Mesh cube_mesh = mesh_create(cube_vertices, 36, cube_indices, 36, diffuse_map, specular_map, normal_map);
+    
+    
+    Vertex quad_vertices[] = {
+        { { -width/2, -height/2, 0.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 0. bl
+        { { -width/2,  height/2, 0.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 1. tl
+        { {  width/2,  height/2, 0.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f } },  // 2. tr
+        { {  width/2, -height/2, 0.0f }, { 1.0f, 0.0f }, {  0.0f,  0.0f,  1.0f } },  // 3. br
+    };
+    u32 quad_indices[] = {
+        0, 1, 2, 0, 2, 3,
+        3, 2, 0, 2, 1, 0  // front and back face
+    };
+
+    Mesh quad_mesh = mesh_create(quad_vertices, 4, quad_indices, 12, diffuse_map, specular_map, normal_map);
+
+    Vertex x_vertices[] = {
+        { { -width/2.0f, -height/2.0f,  depth/2.0f }, { 0.0f, 0.0f }, {  0.5f,  0.0f, -0.5f } },  // 0. front bl
+        { { -width/2.0f,  height/2.0f,  depth/2.0f }, { 0.0f, 1.0f }, {  0.5f,  0.0f, -0.5f } },  // 1. front tl
+        { {  width/2.0f,  height/2.0f, -depth/2.0f }, { 1.0f, 1.0f }, {  0.5f,  0.0f, -0.5f } },  // 2. back tr
+        { {  width/2.0f, -height/2.0f, -depth/2.0f }, { 1.0f, 0.0f }, {  0.5f,  0.0f, -0.5f } },  // 3. back br
+
+        { { -width/2.0f, -height/2.0f, -depth/2.0f }, { 0.0f, 0.0f }, { -0.5f,  0.0f,  0.5f } },  // 4. back bl
+        { { -width/2.0f,  height/2.0f, -depth/2.0f }, { 0.0f, 1.0f }, { -0.5f,  0.0f,  0.5f } },  // 5. back tl
+        { {  width/2.0f,  height/2.0f,  depth/2.0f }, { 1.0f, 1.0f }, { -0.5f,  0.0f,  0.5f } },  // 6. front tr
+        { {  width/2.0f, -height/2.0f,  depth/2.0f }, { 1.0f, 0.0f }, { -0.5f,  0.0f,  0.5f } },  // 7. front br
+    };
+    u32 x_indices[] = {
+        0, 1, 2, 0, 2, 3,
+        3, 2, 0, 2, 1, 0,
+
+        4, 5, 6, 4, 6, 7,
+        7, 6, 4, 6, 5, 4
+    };
+    
+    Mesh x_mesh = mesh_create(x_vertices, 8, x_indices, 24, diffuse_map, specular_map, normal_map);
+    
+    /*
+    Mesh obj_mesh;
+    if (!load_obj("assets/cube.obj", &obj_mesh))
+    {
+        printf("rip your file didn't load\n");
+        obj_mesh = x_mesh;  // fallback
+    }
+    */
+   
     // NOTE: Player
     Player player = { 0 };
 
@@ -140,11 +183,15 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
         char fps[64];
         sprintf(fps, "fps:%f", 1.0f / (float)delta);
         SetWindowTextA(window, fps);
-
+        
         if (key_just_pressed('E'))
+        {
             ShowCursor(1);
+        }
         else if (key_just_pressed('R'))
+        {
             ShowCursor(0);
+        }
         
         // NOTE: Camera movement
         player.aspect = (float)win_width / (float)win_height;
@@ -155,7 +202,12 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Matrix4 model = MAT4_IDENTITY_INIT;
-        mesh_render(mesh, model, player.camera_matrix, (Vector4){ 1.0f, 1.0f, 1.0f, 1.0f }, program);
+        m4_rotate(model, time, (Vector3){ 0.0f, 1.0f, 0.0f }, model);
+        mesh_render(x_mesh, model, player.camera_matrix, (Vector4){ 1.0f, 1.0f, 1.0f, 1.0f }, program);
+
+        Matrix4 model2 = MAT4_IDENTITY_INIT;
+        m4_translate(model2, (Vector3){ -10.0f, 0.0f, -10.0f }, model2);
+        mesh_render(x_mesh, model2, player.camera_matrix, (Vector4){ 1.0f, 1.0f, 1.0f, 1.0f }, program);
         
         win32_swap_buffers(device_context, start_timems, get_timems(), 1000 / 100);
     }

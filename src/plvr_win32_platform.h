@@ -32,7 +32,7 @@ win32_opengl_make_context(HDC device_context)
     PFNWGLCREATECONTEXTATTRIBSARBPROC       wglCreateContextAttribsARB = NULL;
     unused PFNWGLMAKECONTEXTCURRENTARBPROC  wglMakeContextCurrentARB = NULL;
     PFNWGLSWAPINTERVALEXTPROC               wglSwapIntervalEXT = NULL;
-
+    
     PIXELFORMATDESCRIPTOR pfd;
     ZeroMemory(&pfd, sizeof(pfd));
     pfd.nSize       = sizeof(pfd);
@@ -85,7 +85,7 @@ win32_opengl_make_context(HDC device_context)
     }
 
     const int context_attribs[] = {
-        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,  // OpenGL 4.5 Core Profile
         WGL_CONTEXT_MINOR_VERSION_ARB, 5,
         WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
         WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,

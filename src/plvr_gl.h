@@ -106,7 +106,7 @@ compile_shader_program(u32* shaders, int shader_count, const char* opengl_debug_
 
 /* Textures */
 
-typedef struct Texture2D
+typedef struct Texture2D  // (Will this get padded to 16 bytes?)
 {
     u32 id;             // NOTE: OpenGL texture id
     s32 width, height;  // NOTE: Texture dimensions on x and y
@@ -118,7 +118,7 @@ Texture2D
 load_texture(const char* filepath)
 {
     Texture2D texture = { 0 };
-
+    
     // NOTE: Uses stbi_image.h to load image
     stbi_set_flip_vertically_on_load(1);
     u32* data = (u32*)stbi_load(filepath, &texture.width, &texture.height, &texture.color_channel_count, 0);
